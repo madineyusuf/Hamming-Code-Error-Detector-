@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Hamming Code Simulatörü</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=DM+Mono:wght@400;500&family=Jost:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --cream:#FAF7F2;
+  --parchment:#F2EDE3;
+  --sand:#E8DFD0;
+  --sand2:#D9CCBA;
+  --sand3:#C4B49E;
+  --warm-gray:#8C7E6E;
+  --muted:#A8997F;
+  --text:#2C2417;
+  --text2:#6B5E4A;
+  --text3:#A08E76;
+  --gold:#B8922A;
+  --gold-light:#D4AA4A;
+  --gold-pale:#F5EDD0;
+  --gold-border:#DCC878;
+  --rust:#9B4B2A;
+  --rust-bg:#F7EDE7;
+  --rust-border:#E8C4B0;
+  --sage:#3D6B52;
+  --sage-bg:#EAF0EB;
+  --sage-border:#AECBB8;
+  --radius:8px;
+  --radius-lg:14px;
+  --mono:'DM Mono',monospace;
+  --sans:'Jost',sans-serif;
+  --serif:'Cormorant Garamond',serif;
+}
+
+html,body{min-height:100%;background:var(--cream);color:var(--text);font-family:var(--sans);font-size:14px;line-height:1.6}
+body{padding:2.5rem 1.5rem 1rem 1.5rem}
+
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:repeating-linear-gradient(0deg,transparent,transparent 31px,rgba(180,160,120,0.04) 31px,rgba(180,160,120,0.04) 32px);
+  pointer-events:none;z-index:0
+}
+body::after{
+  content:'';position:fixed;top:0;left:0;
+  width:calc((100vw - 800px) / 2);
+  height:100%;
+  background-image:url('https://images.prom.ua/4526865019_w640_h640_metrovye-bezhevye-oboi.jpg');
+  background-size:cover;
+  background-position:center;
+  opacity:0.7;
+  pointer-events:none;
+  z-index:0
+}
+
+.sidebar-right{
+  position:fixed;top:0;right:0;
+  width:calc((100vw - 800px) / 2);
+  height:100%;
+  background-image:url('https://images.prom.ua/4526865019_w640_h640_metrovye-bezhevye-oboi.jpg');
+  background-size:cover;
+  background-position:center;
+  opacity:0.7;
+  pointer-events:none;
+  z-index:0
+}
+
+.container{max-width:760px;margin:0 auto;position:relative;z-index:1}
+
+/* ── HEADER ── */
+.header{margin-bottom:2.5rem;padding-bottom:1.75rem;border-bottom:1px solid var(--sand2);display:flex;align-items:flex-end;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.header-eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:0.2em;text-transform:uppercase;color:var(--muted);margin-bottom:0.4rem}
+.header-title{font-family:var(--serif);font-size:34px;font-weight:600;color:var(--text);letter-spacing:0.01em;line-height:1.15}
+.header-title span{color:var(--gold)}
+.header-sub{font-size:13px;color:var(--text2);max-width:430px;margin-top:0.5rem;font-weight:300;line-height:1.7}
+.header-badge{font-family:var(--mono);font-size:10px;padding:5px 12px;border:1px solid var(--gold-border);border-radius:20px;color:var(--gold);background:var(--gold-pale);white-space:nowrap;align-self:flex-start;letter-spacing:0.08em}
+
+/* ── THEORY PANEL ── */
+.theory{background:var(--parchment);border:1px solid var(--sand2);border-left:3px solid var(--gold);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:2rem}
+.theory-title{font-family:var(--serif);font-size:14px;font-weight:600;color:var(--gold);margin-bottom:6px;letter-spacing:0.02em}
+.theory p{font-size:14px;color:var(--text2);line-height:1.75;font-weight:300}
+
+/* ── STEP LAYOUT ── */
+.step{display:flex;gap:14px;margin-bottom:1.5rem;align-items:flex-start}
+.step-num{
+  width:30px;height:30px;min-width:30px;border-radius:50%;
+  border:1.5px solid var(--sand3);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);font-size:12px;font-weight:500;
+  color:var(--muted);margin-top:3px;transition:all 0.25s
+}
+.step-num.active{background:var(--gold);color:#fff;border-color:var(--gold);box-shadow:0 2px 10px rgba(184,146,42,0.3)}
+.step-num.done{background:var(--sage-bg);color:var(--sage);border-color:var(--sage-border)}
+
+/* ── CARDS ── */
+.card{
+  background:#fff;
+  border:1px solid var(--sand2);
+  border-radius:var(--radius-lg);
+  padding:1.25rem 1.5rem;
+  flex:1;
+  transition:opacity 0.2s,border-color 0.2s;
+  box-shadow:0 1px 4px rgba(140,110,60,0.06)
+}
+.card.locked{opacity:0.38;pointer-events:none}
+.card-label{
+  font-family:var(--mono);font-size:10px;letter-spacing:0.14em;
+  text-transform:uppercase;color:var(--muted);
+  margin-bottom:1rem;display:flex;align-items:center;gap:8px
+}
+.card-label::after{content:'';flex:1;height:1px;background:var(--sand)}
+
+/* ── FORM ELEMENTS ── */
+.field-label{font-size:13px;color:var(--text2);margin-bottom:6px;font-weight:400}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+
+select,input[type=text]{
+  height:36px;padding:0 12px;
+  font-family:var(--mono);font-size:12.5px;
+  border-radius:var(--radius);border:1px solid var(--sand2);
+  background:var(--parchment);color:var(--text);outline:none;
+  transition:border-color 0.15s,box-shadow 0.15s;
+  appearance:none;-webkit-appearance:none
+}
+select{padding-right:28px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A08E76'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+select:focus,input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(184,146,42,0.12)}
+input[type=text]{width:100%;margin-top:4px;letter-spacing:0.12em}
+
+/* ── BUTTONS ── */
+.btn{
+  height:36px;padding:0 16px;
+  border-radius:var(--radius);border:1px solid var(--sand2);
+  background:var(--parchment);color:var(--text2);
+  font-size:12.5px;cursor:pointer;font-family:var(--sans);font-weight:400;
+  transition:all 0.15s;white-space:nowrap
+}
+.btn:hover{background:var(--sand);border-color:var(--sand3);color:var(--text)}
+.btn:active{transform:scale(0.97)}
+.btn:disabled{opacity:0.4;cursor:not-allowed;transform:none}
+.btn-sm{height:30px;padding:0 12px;font-size:11.5px}
+.btn-primary{
+  background:var(--gold);color:#fff;border-color:var(--gold);
+  font-weight:500;letter-spacing:0.03em;
+  box-shadow:0 2px 8px rgba(184,146,42,0.25)
+}
+.btn-primary:hover{background:var(--gold-light);border-color:var(--gold-light);box-shadow:0 3px 12px rgba(184,146,42,0.35)}
+.btn-primary:disabled{background:var(--sand2);border-color:var(--sand2);box-shadow:none;color:var(--muted)}
+
+/* ── BADGES ── */
+.badge{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10.5px;padding:2px 9px;border-radius:20px;font-weight:500;letter-spacing:0.04em}
+.badge-gray{background:var(--parchment);color:var(--muted);border:1px solid var(--sand2)}
+.badge-gold{background:var(--gold-pale);color:var(--gold);border:1px solid var(--gold-border)}
+.badge-sage{background:var(--sage-bg);color:var(--sage);border:1px solid var(--sage-border)}
+.badge-rust{background:var(--rust-bg);color:var(--rust);border:1px solid var(--rust-border)}
+.info-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:10px}
+
+/* ── BIT GRID ── */
+.bit-grid{display:flex;gap:5px;flex-wrap:wrap;margin:8px 0}
+.bit{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:36px;height:38px;border-radius:7px;
+  font-family:var(--mono);font-size:15px;font-weight:500;
+  border:1px solid var(--sand2);
+  background:var(--parchment);color:var(--text);
+  cursor:default;transition:all 0.15s;
+  position:relative;user-select:none
+}
+.bit .pos{
+  position:absolute;top:2px;right:3px;
+  font-size:7px;color:var(--sand3);
+  font-family:var(--sans);font-weight:400
+}
+.bit.parity{background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold)}
+.bit.data{background:#fff;border-color:var(--sand2);color:var(--text)}
+.bit.clickable{cursor:pointer}
+.bit.clickable:hover{border-color:var(--gold);transform:translateY(-2px);box-shadow:0 4px 10px rgba(184,146,42,0.2)}
+.bit.error{background:var(--rust-bg);border-color:var(--rust);color:var(--rust);animation:shk 0.3s ease}
+.bit.fixed{background:var(--sage-bg);border-color:var(--sage-border);color:var(--sage);animation:pop 0.3s ease}
+
+@keyframes shk{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+@keyframes pop{0%{transform:scale(0.88)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin:6px 0 10px}
+.legend-item{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--text2);font-weight:300}
+.legend-swatch{width:13px;height:13px;border-radius:3px}
+.sep{height:1px;background:var(--sand);margin:1.25rem 0}
+
+/* ── SYNDROME ── */
+.syndrome-row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:10px 0 12px}
+.syn-cell{display:flex;align-items:center;gap:3px}
+.syn-bit{
+  width:26px;height:26px;display:flex;align-items:center;justify-content:center;
+  border-radius:5px;font-family:var(--mono);font-size:13px;font-weight:500;
+  border:1px solid var(--sand2);background:var(--parchment);color:var(--text2)
+}
+.syn-bit.one{background:var(--gold-pale);border-color:var(--gold-border);color:var(--gold)}
+.syn-op{font-size:10px;color:var(--sand3);font-family:var(--mono)}
+
+.result-box{padding:12px 16px;border-radius:var(--radius);margin-top:8px;font-size:13px;line-height:1.65;border:1px solid var(--sand)}
+.result-box.neutral{background:var(--parchment);color:var(--text2)}
+.result-box.success{background:var(--sage-bg);border-color:var(--sage-border);color:var(--sage)}
+.result-box.danger{background:var(--rust-bg);border-color:var(--rust-border);color:var(--rust)}
+.mono{font-family:var(--mono)}
+.ornament{text-align:center;color:var(--sand2);font-size:18px;letter-spacing:0.4em;margin:2rem 0 1.5rem}
+
+/* ── VIDEO CONTAINER ── */
+.video-section{background:#fff;border:1px solid var(--sand2);border-radius:var(--radius-lg);padding:1.5rem;margin-bottom:2.5rem;box-shadow:0 1px 4px rgba(140,110,60,0.06)}
+.video-container{position:relative;width:100%;padding-bottom:56.25%;height:0;margin-top:1rem;border-radius:var(--radius);overflow:hidden;border:1px solid var(--sand2)}
+.video-container iframe{position:absolute;top:0;left:0;width:100%;height:100%}
+
+/* ── FOOTER ── */
+.footer {
+  border-top: 1.2px solid var(--sand2);
+  padding-top: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  flex-wrap: wrap;
+  font-family: var(--sans);
+  color: var(--text3);
+  font-size: 15px;
+}
+.footer-left {
+  display: flex;
+  align-items: center; 
+}
+.footer-logo {
+  width: 100px;  
+  height: 100px;
+}
+
+.footer-logo img {
+  width: 100%;                
+  height: 100%;              
+  object-fit: contain;
+}
+</style>
+</head>
+<body>
+<div class="container">
+<div class="sidebar-right"></div>
+
+
+<div class="header">
+  <div class="header-left">
+    <div class="header-eyebrow">BTÜ - Bilgisayar Mimarisi </div>
+    <div class="header-title"> <span>Hamming Kod</span> Simülatoru</div>
+    <div class="header-sub">Tek bit hata tespiti ve düzeltilmesi algoritmik simülasyonuna hoş geldiniz. Verileri girin, yapay hata oluşturun ve bellek düzeltme adımlarını izleyin.</div>
+  </div>
+  <div class="header-badge"><a href="https://tr.wikipedia.org/wiki/Hamming_kodu"style="color:var(--text2);">Hamming Code Wiki</a></div> 
+</div>
+
+<div class="theory">
+  <div class="theory-title">Kısa Bilgi</div>
+  <p>Hamming kodu, <strong>m</strong> veri bitine 2<sup>i</sup> konumlarında olmak üzere <strong>r</strong> adet kontrol biti ekler. Bellekten okuma esnasında, kaydedilen ve yeniden hesaplanan kontrol bitlerinin XOR işlemine tabi tutulmasıyla bir <strong>sendrom kelimesi</strong> elde edilir. Sendromun sıfırdan farklı olması, doğrudan hatalı bitin konumunu işaret eder.</p>
+</div>
+
+<div class="step">
+  <div class="step-num active" id="b1">1</div>
+  <div class="card">
+    <div class="card-label">Veri Girişi</div>
+    <div class="row" style="margin-bottom:12px">
+      <div>
+        <div class="field-label">Veri Boyutu</div>
+        <select id="bitLen" onchange="resetAll()">
+          <option value="8">8 Bit </option>
+          <option value="16">16 Bit </option>
+          <option value="32">32 Bit </option>
+        </select>
+      </div>
+      <div style="display:flex;gap:6px;align-items:flex-end;margin-top:18px">
+        <button class="btn btn-sm" onclick="randomData()">⚄ Rastgele Üretin</button>
+        <button class="btn btn-sm" onclick="clearData()">✕ Temizleyin</button>
+      </div>
+    </div>
+    <div class="field-label">Veri Bitleri (0 & 1):</div>
+    <input type="text" id="dataInput" placeholder="Örneğin: 10110100" oninput="onDataInput()"/>
+    <div class="info-row">
+      <span id="dataCount" class="badge badge-gray">0 / 8</span>
+      <span id="dataHint" style="font-size:12px;color:var(--text3);font-weight:300">Lütfen tüm veri bitlerini doldurun</span>
+    </div>
+    <div style="margin-top:16px">
+      <button class="btn btn-primary" onclick="encode()" id="encBtn" disabled>Veriyi Kodla (Belleğe Yaz) →</button>
+    </div>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num" id="b2">2</div>
+  <div class="card locked" id="card2">
+    <div class="card-label">Hamming Kod Kelimesi</div>
+    <div class="legend">
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--gold-pale);border:1px solid var(--gold-border)"></div>Kontrol Biti (P)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:#fff;border:1px solid var(--sand2)"></div>Veri Biti (D)</div>
+      <div class="legend-item"><div class="legend-swatch" style="background:var(--rust-bg);border:1px solid var(--rust-border)"></div>Hatalı Bit</div>
+    </div>
+    <div class="bit-grid" id="encodedBits"></div>
+    <div class="info-row" id="encInfo"></div>
+    <div class="sep"></div>
+    <div class="field-label">Yapay hata oluşturmak için bir bitin üzerine tıklayın:</div>
+    <div class="info-row" style="margin-bottom:14px">
+      <span id="errStatus" class="badge badge-gray">Hata yok</span>
+      <button class="btn btn-sm" onclick="resetError()" id="resetErrBtn" disabled>Hatayı Sıfırlayın</button>
+    </div>
+    <button class="btn btn-primary" onclick="decode()">Bellekten Oku ve Çöz →</button>
+  </div>
+</div>
+
+<div class="step">
+  <div class="step-num" id="b3">3</div>
+  <div class="card locked" id="card3">
+    <div class="card-label">Sendrom Analizi ve Düzeltme</div>
+
+    <div class="field-label">Kaydedilen Kontrol Bitleri:</div>
+    <div class="bit-grid" id="storedPBits"></div>
+
+    <div class="field-label" style="margin-top:10px">Yeniden Hesaplanan Kontrol Bitleri:</div>
+    <div class="bit-grid" id="recalcBits"></div>
+
+    <div class="sep"></div>
+    <div class="field-label">Sendrom Hesaplaması (Kaydedilen ⊕ Hesaplanan):</div>
+    <div class="syndrome-row" id="syndromeRow"></div>
+    <div class="result-box neutral" id="synResult">—</div>
+
+    <div class="sep"></div>
+    <div class="field-label">Düzeltilmiş Kod Kelimesi:</div>
+    <div class="bit-grid" id="fixedBits"></div>
+    <div class="result-box success" id="decodedResult" style="margin-top:10px">—</div>
+  </div>
+</div>
+
+<div class="ornament">· · ·</div>
+
+<div class="video-section">
+  <div class="card-label">Demo Videosu</div>
+  <div class="field-label">Simülatörün çalışma mantığı ve detaylı anlatımını buradan izleyebilirsiniz:</div>
+  <div class="video-container">
+    <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Hamming Simulator Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</div>
+
+<footer class="footer">
+  <div class="footer-left">
+    <div class="footer-logo">
+      <img src="https://www.freepnglogos.com/uploads/pearl-png/pearl-pearls-the-birthstone-june-gem-library-bashert-jewelry-10.png" alt="Pearl Logo" />
+    </div>
+    <div class="footer-text">
+      <strong style="color:var(--text)">Madina Yusupova</strong> <span>24360859922</span><br>
+      <span>Bilgisayar Mühendisliği Bölümü</span>
+    </div>
+  </div>
+</footer>
+</div>
+
+<script>
+let encoded=[], working=[], errorPos=-1;
+function isPow2(n){return n>0&&(n&(n-1))===0}
+function numParityBits(m){let r=0;while((1<<r)<m+r+1)r++;return r}
+function getLen(){return parseInt(document.getElementById('bitLen').value)}
+
+function encode(){
+  const data=document.getElementById('dataInput').value.trim();
+  const m=data.length, r=numParityBits(m), n=m+r;
+  let code=new Array(n+1).fill(0);
+  let di=0;
+  for(let i=1;i<=n;i++) if(!isPow2(i)) code[i]=parseInt(data[di++]);
+  for(let p=0;p<r;p++){
+    const pos=1<<p; let par=0;
+    for(let i=1;i<=n;i++) if((i&pos)&&i!==pos) par^=code[i];
+    code[pos]=par;
+  }
+  encoded=code.slice(1); working=[...encoded]; errorPos=-1;
+  renderEncoded();
+  document.getElementById('card2').classList.remove('locked');
+  document.getElementById('card3').classList.add('locked');
+  document.getElementById('b1').className='step-num done';
+  document.getElementById('b2').className='step-num active';
+  document.getElementById('b3').className='step-num';
+  document.getElementById('resetErrBtn').disabled=false;
+  document.getElementById('errStatus').textContent='Hata yok';
+  document.getElementById('errStatus').className='badge badge-gray';
+  const ei=document.getElementById('encInfo');
+  ei.innerHTML=`<span class="badge badge-gray">Toplam: ${n} bit</span> <span class="badge badge-gold">Kontrol (P): ${r} bit</span> <span class="badge badge-gray">Veri (D): ${m} bit</span>`;
+}
+
+function renderEncoded(){
+  const c=document.getElementById('encodedBits'); c.innerHTML='';
+  encoded.forEach((_,i)=>{
+    const pos=i+1, isP=isPow2(pos), isE=(errorPos===i);
+    const d=mkBit(working[i],pos,isP?'parity':'data',isE,'clickable');
+    d.onclick=()=>toggleError(i);
+    d.title=isP?`Kontrol P${Math.log2(pos)+1} (Konum ${pos})`:`Veri biti (Konum ${pos})`;
+    c.appendChild(d);
+  });
+}
+
+function mkBit(val,pos,cls,isErr,extra=''){
+  const d=document.createElement('div');
+  d.className='bit '+cls+(isErr?' error':'')+(extra?' '+extra:'');
+  d.textContent=val;
+  const sp=document.createElement('span');
+  sp.className='pos'; sp.textContent=pos; d.appendChild(sp);
+  return d;
+}
+
+function toggleError(i){
+  if(errorPos===i){working[i]=encoded[i];errorPos=-1;}
+  else{if(errorPos>=0)working[errorPos]=encoded[errorPos];working[i]=encoded[i]^1;errorPos=i;}
+  renderEncoded();
+  const es=document.getElementById('errStatus');
+  if(errorPos>=0){es.textContent='Bit '+(errorPos+1)+' ters çevrildi (Hata enjekte edildi)';es.className='badge badge-rust';}
+  else{es.textContent='Hata yok';es.className='badge badge-gray';}
+  document.getElementById('card3').classList.add('locked');
+  document.getElementById('b3').className='step-num';
+}
+
+function resetError(){
+  if(errorPos>=0){working[errorPos]=encoded[errorPos];errorPos=-1;}
+  renderEncoded();
+  document.getElementById('errStatus').textContent='Hata yok';
+  document.getElementById('errStatus').className='badge badge-gray';
+  document.getElementById('card3').classList.add('locked');
+}
+
+function decode(){
+  const n=working.length;
+  let r=0; for(let i=0;i<n;i++) if(isPow2(i+1)) r++;
+  const origP=[], recP=[];
+  for(let p=0;p<r;p++){
+    const pos=1<<p;
+    origP.push(working[pos-1]);
+    let par=0;
+    for(let i=1;i<=n;i++) if((i&pos)&&i!==pos) par^=working[i-1];
+    recP.push(par);
+  }
+  const syn=origP.map((o,i)=>o^recP[i]);
+  let errBit=0;
+  syn.forEach((b,i)=>{if(b)errBit+=(1<<i);});
+  const fixed=[...working];
+  if(errBit>0&&errBit<=n) fixed[errBit-1]^=1;
+
+  renderPBits('storedPBits', origP);
+  renderPBits('recalcBits', recP);
+  renderSyndrome(origP, recP, syn);
+  renderFixed(fixed, errBit);
+
+  const sr=document.getElementById('synResult');
+  if(errBit===0){
+    sr.className='result-box success';
+    sr.innerHTML='✓ Sendrom = <strong class="mono">'+syn.join('')+'</strong> (Sıfır). Herhangi bir hata tespit edilmedi, veri güvenli.';
+  } else {
+    sr.className='result-box danger';
+    sr.innerHTML='⚠ Sendrom = <strong class="mono">'+syn.join('')+'</strong> (Ondalık karşılığı: '+errBit+'). Konum <strong>'+errBit+'</strong> üzerinde hata tespit edildi — '+(isPow2(errBit)?'Kontrol biti':'Veri biti')+'. Donanım tarafından otomatik düzeltildi.';
+  }
+  let dataBits='';
+  for(let i=0;i<fixed.length;i++) if(!isPow2(i+1)) dataBits+=fixed[i];
+  document.getElementById('decodedResult').innerHTML=
+    '✓ Kurtarılan Orijinal Veri: <strong class="mono" style="letter-spacing:0.1em">'+dataBits+'</strong>';
+
+  document.getElementById('card3').classList.remove('locked');
+  document.getElementById('b2').className='step-num done';
+  document.getElementById('b3').className='step-num active';
+}
+
+function renderPBits(id, bits){
+  const c=document.getElementById(id); c.innerHTML='';
+  bits.forEach((b,i)=>{c.appendChild(mkBit(b,'P'+(i+1),'parity',false));});
+}
+
+function renderSyndrome(orig, rec, syn){
+  const row=document.getElementById('syndromeRow'); row.innerHTML='';
+  syn.forEach((b,i)=>{
+    const cell=document.createElement('div'); cell.className='syn-cell';
+    const lbl=document.createElement('span'); lbl.className='syn-op'; lbl.textContent='P'+(i+1)+':';
+    const o=document.createElement('div'); o.className='syn-bit'+(orig[i]?' one':''); o.textContent=orig[i];
+    const xo=document.createElement('span'); xo.className='syn-op'; xo.textContent='⊕';
+    const rb=document.createElement('div'); rb.className='syn-bit'+(rec[i]?' one':''); rb.textContent=rec[i];
+    const eq=document.createElement('span'); eq.className='syn-op'; eq.textContent='=';
+    const sb=document.createElement('div'); sb.className='syn-bit'+(b?' one':''); sb.textContent=b;
+    const gap=document.createElement('span'); gap.style.cssText='width:10px;display:inline-block';
+    [lbl,o,xo,rb,eq,sb,gap].forEach(el=>cell.appendChild(el));
+    row.appendChild(cell);
+  });
+}
+
+function renderFixed(fixed, errBit){
+  const c=document.getElementById('fixedBits'); c.innerHTML='';
+  fixed.forEach((v,i)=>{
+    const pos=i+1, isP=isPow2(pos), wasErr=(errBit===pos);
+    const d=mkBit(v,pos,wasErr?'fixed':(isP?'parity':'data'),false);
+    if(wasErr) d.title='Düzeltildi!';
+    c.appendChild(d);
+  });
+}
+
+function onDataInput(){
+  let v=document.getElementById('dataInput').value.replace(/[^01]/g,'');
+  document.getElementById('dataInput').value=v;
+  const len=getLen(), cnt=document.getElementById('dataCount'), hint=document.getElementById('dataHint');
+  cnt.textContent=v.length+' / '+len;
+  if(v.length===len){
+    cnt.className='badge badge-sage'; hint.textContent='Kodlanmaya hazır';
+    document.getElementById('encBtn').disabled=false;
+  } else if(v.length>len){
+    cnt.className='badge badge-rust'; hint.textContent='Çok fazla bit var! (Maksimum '+len+')';
+    document.getElementById('encBtn').disabled=true;
+  } else {
+    cnt.className='badge badge-gray'; hint.textContent='Daha '+(len-v.length)+' bit gerekli';
+    document.getElementById('encBtn').disabled=true;
+  }
+}
+function randomData(){
+  const len=getLen(); let s='';
+  for(let i=0;i<len;i++) s+=Math.round(Math.random());
+  document.getElementById('dataInput').value=s; onDataInput();
+}
+function clearData(){document.getElementById('dataInput').value=''; onDataInput();}
+function resetAll(){
+  clearData(); encoded=[];working=[];errorPos=-1;
+  document.getElementById('encodedBits').innerHTML='';
+  document.getElementById('encInfo').innerHTML='';
+  document.getElementById('card2').classList.add('locked');
+  document.getElementById('card3').classList.add('locked');
+  document.getElementById('b1').className='step-num active';
+  document.getElementById('b2').className='step-num';
+  document.getElementById('b3').className='step-num';
+}
+</script>
+</body>
+</html>
