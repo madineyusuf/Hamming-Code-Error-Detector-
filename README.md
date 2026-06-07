@@ -1,4 +1,4 @@
-# Hamming-Code-Error-Detector-
+# Hamming-Code-Error-Detector-App
 ## WebApp where you can Detect and Correct your Binary code by Hamming's Method
 **Link:**  https://madineyusuf.github.io/Hamming-Code-Error-Detector-/
 * Made with JS & HTML
