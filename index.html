@@ -337,7 +337,7 @@ input[type=text]{width:100%;margin-top:4px;letter-spacing:0.12em}
   <div class="card-label">Demo Videosu</div>
   <div class="field-label">Simülatörün çalışma mantığı ve detaylı anlatımını buradan izleyebilirsiniz:</div>
   <div class="video-container">
-    <iframe src="https://www.youtube.com/" title="Hamming Simulator Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+    <iframe src="https://youtu.be/Hux4CYKX0rg" title="Hamming Simulator Demo" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -449,10 +449,10 @@ function decode(){
   const sr=document.getElementById('synResult');
   if(errBit===0){
     sr.className='result-box success';
-    sr.innerHTML='✓ Sendrom = <strong class="mono">'+syn.join('')+'</strong> (Sıfır). Herhangi bir hata tespit edilmedi, veri güvenli.';
+    sr.innerHTML='✓ Sendrom = <strong class="mono">'+[...syn].reverse().join('')+'</strong> (Sıfır). Herhangi bir hata tespit edilmedi, veri güvenli.';
   } else {
     sr.className='result-box danger';
-    sr.innerHTML='⚠ Sendrom = <strong class="mono">'+syn.join('')+'</strong> (Ondalık karşılığı: '+errBit+'). Konum <strong>'+errBit+'</strong> üzerinde hata tespit edildi — '+(isPow2(errBit)?'Kontrol biti':'Veri biti')+'. Donanım tarafından otomatik düzeltildi.';
+    sr.innerHTML='⚠ Sendrom = <strong class="mono">'+[...syn].reverse().join('')+'</strong> (Ondalık karşılığı: '+errBit+'). Konum <strong>'+errBit+'</strong> üzerinde hata tespit edildi — '+(isPow2(errBit)?'Kontrol biti':'Veri biti')+'. Donanım tarafından otomatik düzeltildi.';
   }
   let dataBits='';
   for(let i=0;i<fixed.length;i++) if(!isPow2(i+1)) dataBits+=fixed[i];
